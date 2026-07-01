@@ -1,11 +1,17 @@
 """
 ==========================================================
 Project : FEC Donor Analysis
-Stage   : Receipt Cleaning (Version 1)
+Stage   : Receipt Cleaning Pipeline (Production Version)
+
 Author  : Abinaya
 
-Description:
-Basic cleaning pipeline for one receipt file.
+Description
+-----------
+1. Automatically detects every receipt file
+2. Cleans each receipt dataset
+3. Saves cleaned CSV
+4. Creates cleaning report
+5. Generates master summary
 ==========================================================
 """
 
@@ -13,134 +19,193 @@ from pathlib import Path
 from datetime import datetime
 import pandas as pd
 
-# ---------------------------------------------------------
+# ======================================================
 # Paths
-# ---------------------------------------------------------
+# ======================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-INPUT_FILE = (
-    PROJECT_ROOT
-    / "data"
-    / "raw"
-    / "data files"
-    / "Brian Bengs receipt.csv"
-)
+DATA_FOLDER = PROJECT_ROOT / "data" / "raw" / "data files"
 
 OUTPUT_FOLDER = PROJECT_ROOT / "outputs" / "receipt_cleaning"
-OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
 
-OUTPUT_FILE = OUTPUT_FOLDER / "Brian_Bengs_receipt_cleaned.csv"
-REPORT_FILE = OUTPUT_FOLDER / "receipt_cleaning_report.txt"
+CLEAN_FOLDER = OUTPUT_FOLDER / "cleaned_receipts"
+REPORT_FOLDER = OUTPUT_FOLDER / "cleaning_reports"
 
-# ---------------------------------------------------------
-# Load Data
-# ---------------------------------------------------------
+CLEAN_FOLDER.mkdir(parents=True, exist_ok=True)
+REPORT_FOLDER.mkdir(parents=True, exist_ok=True)
 
-print("\nLoading receipt file...")
+# ======================================================
+# Detect Receipt Files
+# ======================================================
 
-df = pd.read_csv(INPUT_FILE, low_memory=False)
+receipt_files = sorted(DATA_FOLDER.glob("*receipt*.csv"))
 
-original_rows = len(df)
+print("=" * 70)
+print(f"Receipt Files Found : {len(receipt_files)}")
+print("=" * 70)
 
-# ---------------------------------------------------------
-# Standardize Column Names
-# ---------------------------------------------------------
+summary = []
 
-df.columns = (
-    df.columns
-      .str.strip()
-      .str.lower()
-)
+# ======================================================
+# Process Every Receipt File
+# ======================================================
 
-# ---------------------------------------------------------
-# Remove Exact Duplicate Rows
-# ---------------------------------------------------------
+for file in receipt_files:
 
-duplicate_rows = df.duplicated().sum()
+    print(f"\nCleaning -> {file.name}")
 
-df = df.drop_duplicates()
+    df = pd.read_csv(file, low_memory=False)
 
-# ---------------------------------------------------------
-# Trim Spaces
-# ---------------------------------------------------------
+    original_rows = len(df)
 
-object_columns = df.select_dtypes(include="object").columns
+    # ------------------------------------------
+    # Standardize Column Names
+    # ------------------------------------------
 
-for col in object_columns:
-    df[col] = df[col].astype(str).str.strip()
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.lower()
+    )
 
-# ---------------------------------------------------------
-# Standardize Uppercase
-# ---------------------------------------------------------
+    # ------------------------------------------
+    # Remove Duplicate Rows
+    # ------------------------------------------
 
-important_columns = [
-    "contributor_name",
-    "contributor_city",
-    "contributor_state",
-    "contributor_employer",
-    "contributor_occupation"
-]
+    duplicate_rows = df.duplicated().sum()
 
-for col in important_columns:
+    df = df.drop_duplicates()
 
-    if col in df.columns:
+    # ------------------------------------------
+    # Trim Spaces
+    # ------------------------------------------
+
+    object_columns = df.select_dtypes(
+        include=["object", "string"]
+    ).columns
+
+    for col in object_columns:
 
         df[col] = (
             df[col]
             .fillna("")
-            .str.upper()
+            .astype(str)
+            .str.strip()
         )
 
-# ---------------------------------------------------------
-# Missing Value Summary
-# ---------------------------------------------------------
+    # ------------------------------------------
+    # Standardize Important Text
+    # ------------------------------------------
 
-missing_values = df.isna().sum()
+    important_columns = [
 
-# ---------------------------------------------------------
-# Save Cleaned Data
-# ---------------------------------------------------------
+        "contributor_name",
+        "contributor_city",
+        "contributor_state",
+        "contributor_employer",
+        "contributor_occupation"
 
-df.to_csv(
-    OUTPUT_FILE,
+    ]
+
+    for col in important_columns:
+
+        if col in df.columns:
+
+            df[col] = df[col].str.upper()
+
+    # ------------------------------------------
+    # Missing Values
+    # ------------------------------------------
+
+    total_missing = int(df.isna().sum().sum())
+
+    # ------------------------------------------
+    # Save Cleaned CSV
+    # ------------------------------------------
+
+    output_name = file.stem.replace(" ", "_") + "_cleaned.csv"
+
+    df.to_csv(
+
+        CLEAN_FOLDER / output_name,
+
+        index=False
+
+    )
+
+    # ------------------------------------------
+    # Individual Report
+    # ------------------------------------------
+
+    report = []
+
+    report.append("=" * 60)
+    report.append(file.name)
+    report.append("=" * 60)
+
+    report.append(f"Generated : {datetime.now()}")
+    report.append("")
+
+    report.append(f"Original Rows : {original_rows}")
+    report.append(f"Final Rows    : {len(df)}")
+    report.append(f"Duplicates Removed : {duplicate_rows}")
+    report.append(f"Total Missing Values : {total_missing}")
+
+    report_path = REPORT_FOLDER / (
+
+        file.stem.replace(" ", "_") + "_report.txt"
+
+    )
+
+    with open(
+
+        report_path,
+
+        "w",
+
+        encoding="utf-8"
+
+    ) as f:
+
+        f.write("\n".join(report))
+
+    # ------------------------------------------
+    # Master Summary
+    # ------------------------------------------
+
+    summary.append({
+
+        "File": file.name,
+
+        "Original Rows": original_rows,
+
+        "Final Rows": len(df),
+
+        "Duplicates Removed": duplicate_rows,
+
+        "Missing Values": total_missing
+
+    })
+
+# ======================================================
+# Save Master Summary
+# ======================================================
+
+summary_df = pd.DataFrame(summary)
+
+summary_df.to_csv(
+
+    OUTPUT_FOLDER / "receipt_cleaning_summary.csv",
+
     index=False
+
 )
 
-# ---------------------------------------------------------
-# Cleaning Report
-# ---------------------------------------------------------
-
-report = []
-
-report.append("=" * 60)
-report.append("RECEIPT CLEANING REPORT")
-report.append("=" * 60)
-report.append(f"Generated : {datetime.now()}")
-report.append("")
-report.append(f"Original Rows : {original_rows}")
-report.append(f"Final Rows    : {len(df)}")
-report.append(f"Duplicates Removed : {duplicate_rows}")
-report.append("")
-report.append("Top Missing Value Columns")
-report.append("-" * 40)
-
-for col, value in missing_values.sort_values(
-    ascending=False
-).head(15).items():
-
-    report.append(f"{col:<35}{value}")
-
-with open(
-    REPORT_FILE,
-    "w",
-    encoding="utf-8"
-) as f:
-
-    for line in report:
-
-        f.write(line + "\n")
-
-print("\nCleaning completed successfully.")
-print(f"\nCleaned File : {OUTPUT_FILE}")
-print(f"Report       : {REPORT_FILE}")
+print("\n")
+print("=" * 70)
+print("Receipt Cleaning Completed Successfully")
+print("=" * 70)
+print(f"Receipt Files Processed : {len(receipt_files)}")
+print(f"Cleaned Files Folder    : {CLEAN_FOLDER}")
+print(f"Reports Folder          : {REPORT_FOLDER}")

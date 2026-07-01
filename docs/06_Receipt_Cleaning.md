@@ -1,40 +1,19 @@
-# Receipt Cleaning
+## Pipeline Improvements (Version 2)
 
-## Objective
+The initial receipt cleaning script was refactored into a reusable pipeline.
 
-Perform the initial preprocessing of receipt files before implementing memo handling and refund reconciliation.
+### Improvements
 
----
+- Automatic detection of every receipt file
+- Support for split receipt datasets (e.g., Mark Kelly Part0–Part3)
+- Individual cleaning report for every file
+- Automatic generation of cleaned CSV files
+- Master cleaning summary for the entire dataset
 
-## Cleaning Steps
-
-- Loaded raw receipt dataset
-- Standardized column names
-- Removed exact duplicate records
-- Trimmed unnecessary spaces
-- Converted important text fields to uppercase
-- Generated missing value summary
-- Saved cleaned dataset
-
----
-
-## Output Files
+### Output
 
 outputs/receipt_cleaning/
 
-- Brian_Bengs_receipt_cleaned.csv
-- receipt_cleaning_report.txt
-
----
-
-## Observations
-
-- Initial preprocessing completed successfully.
-- No business rules have been applied yet.
-- Memo handling and refund processing will be implemented in later stages.
-
----
-
-## Status
-
-✅ Completed
+- cleaned_receipts/
+- cleaning_reports/
+- receipt_cleaning_summary.csv
