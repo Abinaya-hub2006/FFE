@@ -27,6 +27,20 @@ committee_df = pd.read_csv(COMMITTEE_FILE)
 
 election_df = pd.read_csv(ELECTION_FILE)
 
+# -------------------------------------------------------
+# Compute Winner
+# -------------------------------------------------------
+
+election_df["winner"] = 0
+
+winner_index = (
+    election_df
+    .groupby("state")["votes"]
+    .idxmax()
+)
+
+election_df.loc[winner_index, "winner"] = 1
+
 print()
 print("Unique Committees :", len(committee_df))
 print("Election Candidates :", len(election_df))
@@ -34,7 +48,6 @@ print("Election Candidates :", len(election_df))
 # -------------------------------------------------------
 # Resolve
 # -------------------------------------------------------
-
 results = []
 
 for _, row in committee_df.iterrows():
@@ -48,7 +61,7 @@ for _, row in committee_df.iterrows():
     )
 
     state = ""
-    winner = ""
+    winner = None
 
     if candidate != "":
 
@@ -56,11 +69,10 @@ for _, row in committee_df.iterrows():
             election_df["name"] == candidate
         ]
 
-        if len(match):
+        if not match.empty:
 
             state = match.iloc[0]["state"]
-
-            winner = 1
+            winner = int(match.iloc[0]["winner"])
 
     results.append({
 
@@ -165,4 +177,8 @@ print("=" * 70)
 
 print()
 
-print(result_df.head())
+print()
+print("Total rows in result_df:", len(result_df))
+print()
+
+print(result_df.head(10))
