@@ -58,31 +58,25 @@ FIRST_NAME_ALIASES = {
 
 # -------------------------------------------------------
 # Committee aliases
-# -------------------------------------------------------
 COMMITTEE_ALIASES = {
 
-    # Existing aliases...
-    "TEAM HERSCHEL": "WALKER, HERSCHEL",
-    "FRIENDS OF SCHUMER": "SCHUMER, CHARLES",
-    "MAGGIE FOR NH": "HASSAN, MAGGIE",
-    "PEOPLE FOR PATTY MURRAY": "MURRAY, PATRICIA",
+    "TEAM HERSCHEL": "Walker, Herschel",
+    "TEAM HERSCHEL INC": "Walker, Herschel",
+    "TEAM HERSCHEL INC.": "Walker, Herschel",
 
-    # ----------------------------
-    # Add these new aliases
-    # ----------------------------
+    "FRIENDS OF SCHUMER": "Schumer, Chuck",
 
-    "TEAM HERSCHEL INC": "WALKER, HERSCHEL",
-    "TEAM HERSCHEL INC.": "WALKER, HERSCHEL",
+    "MAGGIE FOR NH": "Hassan, Maggie",
 
-    "CONNECTICUT SENATE REPUBLICAN NOMINEE FUND":
-        "LEVY, LEORA",
+    "PEOPLE FOR PATTY MURRAY": "Murray, Patty",
 
-    "KATRINA FOR SENATE":
-        "CHRISTIANSEN, KATRINA",
+    "CONNECTICUT SENATE REPUBLICAN NOMINEE FUND": "Levy, Leora",
 
-    "OKLAHOMANS FOR MADISON":
-        "HORN, MADISON",
+    "KATRINA FOR SENATE": "Christiansen, Katrina",
 
-    "TAMMY FOR ILLINOIS":
-        "DUCKWORTH, TAMMY",
+    "OKLAHOMANS FOR MADISON": "Horn, Madison",
+
+    "TAMMY FOR ILLINOIS": "Duckworth, Tammy",
+    "KELLY FOR ALASKA": "Tshibaka, Kelly",
+    "JOE PINION FOR US SENATE INC": "Pinion, Joseph",
 }

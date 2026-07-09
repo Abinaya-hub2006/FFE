@@ -28,6 +28,17 @@ committee_df = pd.read_csv(COMMITTEE_FILE)
 election_df = pd.read_csv(ELECTION_FILE)
 
 # -------------------------------------------------------
+# Normalize election names
+# -------------------------------------------------------
+
+election_df["lookup_name"] = (
+    election_df["name"]
+    .str.upper()
+    .str.replace(",", "", regex=False)
+    .str.replace(".", "", regex=False)
+    .str.strip()
+)
+# -------------------------------------------------------
 # Compute Winner
 # -------------------------------------------------------
 
@@ -48,6 +59,7 @@ print("Election Candidates :", len(election_df))
 # -------------------------------------------------------
 # Resolve
 # -------------------------------------------------------
+
 results = []
 
 for _, row in committee_df.iterrows():
@@ -65,8 +77,15 @@ for _, row in committee_df.iterrows():
 
     if candidate != "":
 
+        lookup_candidate = (
+            candidate.upper()
+            .replace(",", "")
+            .replace(".", "")
+            .strip()
+        )
+
         match = election_df[
-            election_df["name"] == candidate
+            election_df["lookup_name"] == lookup_candidate
         ]
 
         if not match.empty:
@@ -77,21 +96,14 @@ for _, row in committee_df.iterrows():
     results.append({
 
         "committee_id": committee_id,
-
         "committee_name": committee_name,
-
         "candidate": candidate,
-
         "state": state,
-
         "winner": winner,
-
         "method": method,
-
         "status": status
 
     })
-
 # -------------------------------------------------------
 # Save
 # -------------------------------------------------------
